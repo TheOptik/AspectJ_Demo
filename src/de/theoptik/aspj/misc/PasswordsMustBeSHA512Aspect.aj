@@ -7,12 +7,11 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.reflect.CodeSignature;
 
 public aspect PasswordsMustBeSHA512Aspect {
-
 	//create a PointCut for all methods with a 'String' parameter in all classes within sub-packages of "de.theoptik."
-	pointcut interceptAnyCall() : call(* de.theoptik.aspj..*.*(..,String,..));
-
+	pointcut interceptAnyCallWithStringParameter() :
+		call(* de.theoptik.aspj..*.*(..,String,..));
 	//execute this code before the method is called
-	before() : interceptAnyCall(){
+	before() : interceptAnyCallWithStringParameter(){
 		Signature signature = thisJoinPoint.getSignature();
 		if (signature instanceof CodeSignature) {
 			//get the code signature
@@ -27,13 +26,13 @@ public aspect PasswordsMustBeSHA512Aspect {
 				if (parameterNames[i].equalsIgnoreCase("password") && parameterTypes[i] == String.class) {
 					String passwordArgument = (String) thisJoinPoint.getArgs()[i];
 					//match the calue to a SHA512-regex
-					Matcher matcher = Pattern.compile("^\\w{128}$").matcher(passwordArgument);
+					Matcher matcher = Pattern.compile("^[a-f0-9]{128}$").matcher(passwordArgument);
 					if (!matcher.matches()) {
-						throw new RuntimeException("Passwords must be SHA512 encoded");
+						throw new RuntimeException("Passwords must be "
+								+ "SHA512 encoded");
 					}
 				}
 			}
 		}
 	}
-
 }
